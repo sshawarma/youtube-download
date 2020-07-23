@@ -20,3 +20,6 @@ Or if you don't have Python 3.8 on your system
 
 `python3[.x] download.py [channel name]`
 
+## Notes
+
+You can modify this script if you want. Make your own API key and client secret/id.
