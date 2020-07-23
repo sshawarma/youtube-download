@@ -10,6 +10,7 @@ This is a script I made to download all videos from a channel on YouTube.
 * [google-auth-oauthlib](https://pypi.org/project/google-auth-oauthlib/)
 * [googleapiclient](https://pypi.org/project/google-api-python-client/)
 * [google-auth](https://pypi.org/project/google-auth/)
+* [youtube-dl](https://youtube-dl.org/)
 
 ## Usage
 
