@@ -17,13 +17,15 @@ client_secrets_file = "client_secret.json"
 YOUTUBE_URL="https://www.youtube.com/watch?v="
 
 
-def process_video(videoId, videoTitle):
+def process_video(videoId, videoTitle, dir):
     title = "".join(e for e in videoTitle if e.isalnum() or e == " ")
-    value = subprocess.run(["ls", "|", "grep \"" + title + "\""], capture_output=True)
-    if value.stdout == b'':
-        subprocess.run(["youtube-dl", "-o", "/home/pi/Videos/%(title)s.%(ext)s", YOUTUBE_URL+videoId])
+    cmd = "ls " + dir + " | grep " + "\"" + title + "\""
+    ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = ps.communicate()[0]
+    if output == b'':
+        subprocess.run(["youtube-dl", "-o", dir + "%(title)s.%(ext)s", YOUTUBE_URL+videoId])
 
-def main(channelName):
+def main(channelName, retrieveSingleVideo, dir):
 
     # Get credentials and create an API client
 
@@ -69,7 +71,8 @@ def main(channelName):
     totalRes = response["pageInfo"]["totalResults"]
 
     nextToken = None
-    while True:
+    keepLoop = True
+    while keepLoop:
         request = youtube.playlistItems().list(
             part="snippet",
             playlistId=uploads,
@@ -80,7 +83,11 @@ def main(channelName):
         for item in response["items"]:
             videoId = item["snippet"]["resourceId"]["videoId"]
             videoTitle = item["snippet"]["title"]
-            process_video(videoId, videoTitle)
+            process_video(videoId, videoTitle, dir)
+            if retrieveSingleVideo:
+                keepLoop = False
+                break
+
         if "nextPageToken" in response:
             nextToken = response["nextPageToken"]
         else:
@@ -90,5 +97,15 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Requires name of channel as argument")
         exit(1)
-    channelName = sys.argv[1]
-    main(channelName)
+
+    channelName = None
+    retrieveSingleVideo = False
+    dir = ""
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i] == "-s": # Retrieve the most recently uploaded video (first video in playlist)
+            retrieveSingleVideo = True
+        elif sys.argv[i][0:2] == "-d": # Store in the directory (ex: -d/Video/myvideos/)
+            dir = sys.argv[i][2:]
+        else:
+            channelName = sys.argv[i]
+    main(channelName, retrieveSingleVideo, dir)
